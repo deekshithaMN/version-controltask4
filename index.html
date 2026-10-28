@@ -1,0 +1,167 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Exam Duty Scheduler</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+<script type="module">
+  import './js/data.js';
+  import './js/ui.js';
+  import './js/scheduler.js';
+  import './js/utils.js';
+</script>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">Exam<span>Duty</span></div>
+  <button class="tab-btn active" onclick="showPage('setup')">⚙️ Setup</button>
+  <button class="tab-btn" onclick="showPage('teachers')">👩‍🏫 Teachers</button>
+  <button class="tab-btn" onclick="showPage('schedule')">📅 Schedule</button>
+  <button class="tab-btn" onclick="showPage('stats')">📊 Statistics</button>
+</nav>
+
+<!-- ===== SETUP PAGE ===== -->
+<div class="page active" id="page-setup">
+  <h2>Exam Setup</h2>
+  <p class="subtitle">Configure exam dates, rooms, and scheduling rules.follow strictly</p>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">📆 Exam Dates</div>
+      <div class="form-group">
+        <label>Add Exam Date</label>
+        <div class="form-row">
+          <div class="form-group" style="flex:1.5">
+            <input type="date" id="examDate" />
+          </div>
+          <div class="form-group">
+            <input type="text" id="examLabel" placeholder="Label (e.g. Physics)" />
+          </div>
+        </div>
+        <button class="btn btn-teal btn-sm" onclick="addDate()">+ Add Date</button>
+      </div>
+      <div id="dateList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🚪 Exam Rooms</div>
+      <div class="form-group">
+        <label>Add Room</label>
+        <div class="form-row">
+          <div class="form-group">
+            <input type="text" id="roomNum" placeholder="Room No. (e.g. 101)" />
+          </div>
+          <div class="form-group">
+            <input type="number" id="roomCap" placeholder="Capacity" min="1"/>
+          </div>
+        </div>
+        <button class="btn btn-teal btn-sm" onclick="addRoom()">+ Add Room</button>
+      </div>
+      <div id="roomList"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:24px;">
+    <div class="card-title">⚙️ Scheduling Rules</div>
+    <div class="three-col">
+      <div class="form-group">
+        <label>Invigilators per Room per Day</label>
+        <input type="number" id="invPerRoom" value="1" min="1" max="5"/>
+      </div>
+      <div class="form-group">
+        <label>Relievers per Day</label>
+        <input type="number" id="relieversPerDay" value="2" min="1" max="10"/>
+      </div>
+      <div class="form-group">
+        <label>Max Duties per Teacher (total)</label>
+        <input type="number" id="maxDuties" value="99" min="1"/>
+      </div>
+    </div>
+    <div class="alert alert-info">
+      💡 Each teacher will be assigned fairly. Relievers rotate each day and don't cover a room.
+    </div>
+  </div>
+</div>
+
+<!-- ===== TEACHERS PAGE ===== -->
+<div class="page" id="page-teachers">
+  <h2>Teacher Management</h2>
+  <p class="subtitle">Add and manage teachers who will be assigned exam duties.</p>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">➕ Add Teacher</div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="tName" placeholder="e.g. Dr. Priya Sharma"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Department</label>
+          <input type="text" id="tDept" placeholder="e.g. Mathematics"/>
+        </div>
+        <div class="form-group">
+          <label>Designation</label>
+          <input type="text" id="tDesig" placeholder="e.g. Professor"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="tEmail" placeholder="teacher@college.edu"/>
+      </div>
+      <div class="form-group">
+        <label>Leave Dates (comma separated, yyyy-mm-dd)</label>
+        <input type="text" id="tLeave" placeholder="2025-05-10, 2025-05-12"/>
+      </div>
+      <button class="btn btn-primary" onclick="addTeacher()" style="width:100%;margin-top:4px;">Add Teacher</button>
+    </div>
+
+    <div>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-num" id="totalTeachers" style="color:var(--teal)">0</div>
+          <div class="stat-label">Total Teachers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="totalDepts" style="color:var(--gold)">0</div>
+          <div class="stat-label">Departments</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">👥 Teacher List</div>
+        <div id="teacherList"><p style="color:var(--muted);font-size:0.88rem;">No teachers added yet.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCHEDULE PAGE ===== -->
+<div class="page" id="page-schedule">
+  <h2>Exam Duty Schedule</h2>
+  <p class="subtitle">Auto-generate fair duty assignments for all exam days.</p>
+
+  <div class="btn-group" style="margin-bottom:24px;">
+<button class="btn btn-gold" onclick="generateSchedule(parseInt(document.getElementById('invPerRoom').value || 1), parseInt(document.getElementById('relieversPerDay').value || 2), parseInt(document.getElementById('maxDuties').value || 99))">⚡ Generate Schedule</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨️ Print Schedule</button>
+  </div>
+
+  <div id="scheduleOutput">
+    <div class="alert alert-info">Click "Generate Schedule" after adding teachers, dates, and rooms in Setup.</div>
+  </div>
+</div>
+
+<!-- ===== STATS PAGE ===== -->
+<div class="page" id="page-stats">
+  <h2>Duty Statistics</h2>
+  <p class="subtitle">View duty count per teacher and fairness analysis.</p>
+  <div id="statsOutput">
+    <div class="alert alert-info">Generate a schedule first to see statistics.</div>
+  </div>
+</div>
+
+</body>
+</html>
+

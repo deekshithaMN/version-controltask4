@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Exam Duty Scheduler</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --navy: #0f1b2d;
+    --navy2: #162236;
+    --blue: #1e6fff;
+    --teal: #00c9b1;
+    --gold: #f5b942;
+    --red: #ff4f5e;
+    --card: #1a2840;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8edf5;
+    --muted: #7a90b0;
+    --radius: 14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--navy);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+  /* NAV */
+  nav{display:flex;align-items:center;gap:0;background:var(--navy2);border-bottom:1px solid var(--border);padding:0 32px;position:sticky;top:0;z-index:100;}
+  .nav-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:#fff;padding:18px 0;margin-right:32px;letter-spacing:-0.5px;}
+  .nav-brand span{color:var(--teal);}
+  .tab-btn{font-family:'DM Sans',sans-serif;font-size:0.9rem;padding:20px 22px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;font-weight:500;}
+  .tab-btn.active{color:#fff;border-bottom-color:var(--teal);}
+  .tab-btn:hover:not(.active){color:var(--text);}
+
+  /* PAGE */
+  .page{display:none;padding:32px;max-width:1200px;margin:0 auto;animation:fadeIn .3s ease;}
+  .page.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* HEADINGS */
+  h2{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:700;margin-bottom:4px;}
+  .subtitle{color:var(--muted);font-size:0.9rem;margin-bottom:28px;}
+
+  /* CARDS */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;}
+  .card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:16px;color:var(--teal);}
+
+  /* GRID LAYOUTS */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  @media(max-width:768px){.two-col,.three-col{grid-template-columns:1fr;}}
+
+  /* FORM ELEMENTS */
+  label{font-size:0.82rem;color:var(--muted);display:block;margin-bottom:6px;font-weight:500;}
+  input,select,textarea{width:100%;background:#0f1b2d;border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:border .2s;}
+  input:focus,select:focus,textarea:focus{border-color:var(--teal);}
+  select option{background:#0f1b2d;}
+  .form-group{margin-bottom:16px;}
+  .form-row{display:flex;gap:12px;}
+  .form-row .form-group{flex:1;}
+
+  /* BUTTONS */
+  .btn{padding:10px 22px;border:none;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.9rem;transition:all .2s;}
+  .btn-primary{background:var(--blue);color:#fff;}
+  .btn-primary:hover{background:#1860e8;}
+  .btn-teal{background:var(--teal);color:#0f1b2d;}
+  .btn-teal:hover{background:#00b09e;}
+  .btn-gold{background:var(--gold);color:#0f1b2d;}
+  .btn-gold:hover{background:#e5aa35;}
+  .btn-red{background:transparent;border:1px solid var(--red);color:var(--red);}
+  .btn-red:hover{background:var(--red);color:#fff;}
+  .btn-sm{padding:6px 14px;font-size:0.8rem;}
+  .btn-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;}
+
+  /* TAGS */
+  .tag{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:0.78rem;font-weight:500;}
+  .tag-blue{background:rgba(30,111,255,0.15);color:var(--blue);border:1px solid rgba(30,111,255,0.3);}
+  .tag-teal{background:rgba(0,201,177,0.12);color:var(--teal);border:1px solid rgba(0,201,177,0.25);}
+  .tag-gold{background:rgba(245,185,66,0.12);color:var(--gold);border:1px solid rgba(245,185,66,0.25);}
+  .tag-red{background:rgba(255,79,94,0.12);color:var(--red);border:1px solid rgba(255,79,94,0.25);}
+
+  /* TEACHER LIST */
+  .teacher-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#0f1b2d;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;}
+  .teacher-info{display:flex;align-items:center;gap:12px;}
+  .avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;}
+
+  /* SCHEDULE TABLE */
+  .schedule-wrap{overflow-x:auto;margin-top:20px;}
+  table{width:100%;border-collapse:collapse;min-width:700px;}
+  thead th{background:rgba(0,201,177,0.1);color:var(--teal);font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700;padding:12px 16px;text-align:left;border-bottom:1px solid var(--border);}
+  tbody td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:0.88rem;vertical-align:middle;}
+  tbody tr:hover{background:rgba(255,255,255,0.02);}
+  tbody tr:last-child td{border-bottom:none;}
+  .duty-cell{display:flex;flex-wrap:wrap;gap:6px;}
+
+  /* STAT CARDS */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;}
+  .stat-num{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;}
+  .stat-label{font-size:0.78rem;color:var(--muted);margin-top:4px;}
+
+  /* ALERT */
+  .alert{padding:12px 16px;border-radius:8px;font-size:0.88rem;margin-bottom:16px;}
+  .alert-info{background:rgba(30,111,255,0.12);border:1px solid rgba(30,111,255,0.25);color:#6da8ff;}
+  .alert-success{background:rgba(0,201,177,0.1);border:1px solid rgba(0,201,177,0.25);color:var(--teal);}
+
+  /* BADGE */
+  .badge{width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:0.7rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;}
+
+  /* Print */
+  @media print{
+    nav,.btn,.btn-group{display:none!important;}
+    body{background:#fff;color:#000;}
+    .card{background:#f5f5f5;border:1px solid #ddd;}
+    thead th{background:#e8e8e8;color:#333;}
+    .page{display:block!important;padding:10px;}
+  }
+  .section-divider{height:1px;background:var(--border);margin:28px 0;}
+
+  /* Duty count bar */
+  .count-bar-wrap{display:flex;align-items:center;gap:10px;}
+  .count-bar{flex:1;height:6px;background:#0f1b2d;border-radius:3px;overflow:hidden;}
+  .count-bar-fill{height:100%;background:var(--teal);border-radius:3px;transition:width .4s;}
+  .count-val{font-size:0.8rem;color:var(--muted);min-width:24px;text-align:right;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">Exam<span>Duty</span></div>
+  <button class="tab-btn active" onclick="showPage('setup')">⚙️ Setup</button>
+  <button class="tab-btn" onclick="showPage('teachers')">👩‍🏫 Teachers</button>
+  <button class="tab-btn" onclick="showPage('schedule')">📅 Schedule</button>
+  <button class="tab-btn" onclick="showPage('stats')">📊 Statistics</button>
+</nav>
+
+<!-- ===== SETUP PAGE ===== -->
+<div class="page active" id="page-setup">
+  <h2>Exam Setup</h2>
+  <p class="subtitle">Configure exam dates, rooms, and scheduling rules.</p>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">📆 Exam Dates</div>
+      <div class="form-group">
+        <label>Add Exam Date</label>
+        <div class="form-row">
+          <div class="form-group" style="flex:1.5">
+            <input type="date" id="examDate" />
+          </div>
+          <div class="form-group">
+            <input type="text" id="examLabel" placeholder="Label (e.g. Physics)" />
+          </div>
+        </div>
+        <button class="btn btn-teal btn-sm" onclick="addDate()">+ Add Date</button>
+      </div>
+      <div id="dateList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🚪 Exam Rooms</div>
+      <div class="form-group">
+        <label>Add Room</label>
+        <div class="form-row">
+          <div class="form-group">
+            <input type="text" id="roomNum" placeholder="Room No. (e.g. 101)" />
+          </div>
+          <div class="form-group">
+            <input type="number" id="roomCap" placeholder="Capacity" min="1"/>
+          </div>
+        </div>
+        <button class="btn btn-teal btn-sm" onclick="addRoom()">+ Add Room</button>
+      </div>
+      <div id="roomList"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:24px;">
+    <div class="card-title">⚙️ Scheduling Rules</div>
+    <div class="three-col">
+      <div class="form-group">
+        <label>Invigilators per Room per Day</label>
+        <input type="number" id="invPerRoom" value="1" min="1" max="5"/>
+      </div>
+      <div class="form-group">
+        <label>Relievers per Day</label>
+        <input type="number" id="relieversPerDay" value="2" min="1" max="10"/>
+      </div>
+      <div class="form-group">
+        <label>Max Duties per Teacher (total)</label>
+        <input type="number" id="maxDuties" value="99" min="1"/>
+      </div>
+    </div>
+    <div class="alert alert-info">
+      💡 Each teacher will be assigned fairly. Relievers rotate each day and don't cover a room.
+    </div>
+  </div>
+</div>
+
+<!-- ===== TEACHERS PAGE ===== -->
+<div class="page" id="page-teachers">
+  <h2>Teacher Management</h2>
+  <p class="subtitle">Add and manage teachers who will be assigned exam duties.</p>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">➕ Add Teacher</div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="tName" placeholder="e.g. Dr. Priya Sharma"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Department</label>
+          <input type="text" id="tDept" placeholder="e.g. Mathematics"/>
+        </div>
+        <div class="form-group">
+          <label>Designation</label>
+          <input type="text" id="tDesig" placeholder="e.g. Professor"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="tEmail" placeholder="teacher@college.edu"/>
+      </div>
+      <div class="form-group">
+        <label>Leave Dates (comma separated, yyyy-mm-dd)</label>
+        <input type="text" id="tLeave" placeholder="2025-05-10, 2025-05-12"/>
+      </div>
+      <button class="btn btn-primary" onclick="addTeacher()" style="width:100%;margin-top:4px;">Add Teacher</button>
+    </div>
+
+    <div>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-num" id="totalTeachers" style="color:var(--teal)">0</div>
+          <div class="stat-label">Total Teachers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="totalDepts" style="color:var(--gold)">0</div>
+          <div class="stat-label">Departments</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">👥 Teacher List</div>
+        <div id="teacherList"><p style="color:var(--muted);font-size:0.88rem;">No teachers added yet.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCHEDULE PAGE ===== -->
+<div class="page" id="page-schedule">
+  <h2>Exam Duty Schedule</h2>
+  <p class="subtitle">Auto-generate fair duty assignments for all exam days.</p>
+
+  <div class="btn-group" style="margin-bottom:24px;">
+    <button class="btn btn-gold" onclick="generateSchedule()">⚡ Generate Schedule</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨️ Print Schedule</button>
+  </div>
+
+  <div id="scheduleOutput">
+    <div class="alert alert-info">Click "Generate Schedule" after adding teachers, dates, and rooms in Setup.</div>
+  </div>
+</div>
+
+<!-- ===== STATS PAGE ===== -->
+<div class="page" id="page-stats">
+  <h2>Duty Statistics</h2>
+  <p class="subtitle">View duty count per teacher and fairness analysis.</p>
+  <div id="statsOutput">
+    <div class="alert alert-info">Generate a schedule first to see statistics.</div>
+  </div>
+</div>
+
+<script>
+// ===== DATA STORE =====
+let teachers = [];
+let dates = [];
+let rooms = [];
+let schedule = {}; // { dateStr: { room: [teacher, ...], relievers: [teacher,...] } }
+
+const COLORS = ['#1e6fff','#00c9b1','#f5b942','#ff4f5e','#a78bfa','#fb923c','#34d399','#f472b6','#60a5fa','#facc15'];
+
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function saveData(){localStorage.setItem('examDuty',JSON.stringify({teachers,dates,rooms,schedule}));}
+function loadData(){
+  const d=localStorage.getItem('examDuty');
+  if(d){const p=JSON.parse(d);teachers=p.teachers||[];dates=p.dates||[];rooms=p.rooms||[];schedule=p.schedule||{};}
+}
+
+function showPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  event.target.classList.add('active');
+  if(p==='stats') renderStats();
+}
+
+// ===== DATES =====
+function addDate(){
+  const d=document.getElementById('examDate').value;
+  const l=document.getElementById('examLabel').value.trim()||'Exam';
+  if(!d){alert('Please select a date.');return;}
+  if(dates.find(x=>x.date===d)){alert('Date already added.');return;}
+  dates.push({date:d,label:l});
+  dates.sort((a,b)=>a.date.localeCompare(b.date));
+  saveData();renderDates();
+}
+function removeDate(i){dates.splice(i,1);saveData();renderDates();}
+function renderDates(){
+  const el=document.getElementById('dateList');
+  if(!dates.length){el.innerHTML='<p style="color:var(--muted);font-size:0.85rem;margin-top:8px;">No dates added.</p>';return;}
+  el.innerHTML=dates.map((d,i)=>`
+    <div class="teacher-item" style="margin-top:8px;">
+      <div class="teacher-info">
+        <span class="tag tag-blue">📅 ${formatDate(d.date)}</span>
+        <span style="font-size:0.88rem;">${d.label}</span>
+      </div>
+      <button class="btn btn-red btn-sm" onclick="removeDate(${i})">✕</button>
+    </div>`).join('');
+}
+
+// ===== ROOMS =====
+function addRoom(){
+  const n=document.getElementById('roomNum').value.trim();
+  const c=parseInt(document.getElementById('roomCap').value)||30;
+  if(!n){alert('Enter room number.');return;}
+  if(rooms.find(r=>r.num===n)){alert('Room already added.');return;}
+  rooms.push({num:n,cap:c});
+  saveData();renderRooms();
+}
+function removeRoom(i){rooms.splice(i,1);saveData();renderRooms();}
+function renderRooms(){
+  const el=document.getElementById('roomList');
+  if(!rooms.length){el.innerHTML='<p style="color:var(--muted);font-size:0.85rem;margin-top:8px;">No rooms added.</p>';return;}
+  el.innerHTML=rooms.map((r,i)=>`
+    <div class="teacher-item" style="margin-top:8px;">
+      <div class="teacher-info">
+        <span class="tag tag-teal">🚪 ${r.num}</span>
+        <span style="font-size:0.85rem;color:var(--muted)">Cap: ${r.cap}</span>
+      </div>
+      <button class="btn btn-red btn-sm" onclick="removeRoom(${i})">✕</button>
+    </div>`).join('');
+}
+
+// ===== TEACHERS =====
+function addTeacher(){
+  const name=document.getElementById('tName').value.trim();
+  if(!name){alert('Enter teacher name.');return;}
+  const leave=document.getElementById('tLeave').value.split(',').map(s=>s.trim()).filter(Boolean);
+  teachers.push({
+    id: Date.now(),
+    name,
+    dept: document.getElementById('tDept').value.trim()||'General',
+    desig: document.getElementById('tDesig').value.trim()||'Teacher',
+    email: document.getElementById('tEmail').value.trim(),
+    leave,
+    color: COLORS[teachers.length % COLORS.length]
+  });
+  document.getElementById('tName').value='';
+  document.getElementById('tEmail').value='';
+  document.getElementById('tLeave').value='';
+  saveData();renderTeachers();
+}
+function removeTeacher(id){teachers=teachers.filter(t=>t.id!==id);saveData();renderTeachers();}
+function renderTeachers(){
+  const el=document.getElementById('teacherList');
+  const statsEl=document.getElementById('totalTeachers');
+  const deptsEl=document.getElementById('totalDepts');
+  statsEl.textContent=teachers.length;
+  deptsEl.textContent=new Set(teachers.map(t=>t.dept)).size;
+  if(!teachers.length){el.innerHTML='<p style="color:var(--muted);font-size:0.88rem;">No teachers added yet.</p>';return;}
+  el.innerHTML=teachers.map(t=>`
+    <div class="teacher-item">
+      <div class="teacher-info">
+        <div class="avatar" style="background:${t.color}22;color:${t.color}">${initials(t.name)}</div>
+        <div>
+          <div style="font-weight:500;font-size:0.9rem;">${t.name}</div>
+          <div style="color:var(--muted);font-size:0.78rem;">${t.desig} · ${t.dept}</div>
+        </div>
+      </div>
+      <button class="btn btn-red btn-sm" onclick="removeTeacher(${t.id})">✕</button>
+    </div>`).join('');
+}
+
+// ===== SCHEDULE GENERATION =====
+function generateSchedule(){
+  if(!teachers.length){alert('Add teachers first!');return;}
+  if(!dates.length){alert('Add exam dates first!');return;}
+  if(!rooms.length){alert('Add rooms first!');return;}
+
+  const invPerRoom=parseInt(document.getElementById('invPerRoom').value)||1;
+  const relievers=parseInt(document.getElementById('relieversPerDay').value)||2;
+  const maxD=parseInt(document.getElementById('maxDuties').value)||99;
+
+  // duty count tracker
+  // duty and relief trackers for fairness
+  const dutyCount = {};
+  const reliefCount = {};
+  teachers.forEach(t => {
+    dutyCount[t.id] = 0;
+    reliefCount[t.id] = 0;
+  });
+
+  schedule = {};
+
+  // Fair available teachers helper: sort by specified count type (dutyCount or reliefCount)
+  function availableTeachers(date, exclude=[], sortType = 'duty') {
+    const countMap = sortType === 'duty' ? dutyCount : reliefCount;
+    const maxLimit = sortType === 'duty' ? maxD : maxD; // symmetric
+    return teachers
+      .filter(t => !t.leave.includes(date) && !exclude.includes(t.id) && countMap[t.id] < maxLimit)
+      .sort((a, b) => countMap[a.id] - countMap[b.id])
+      .sort((a, b) => a.id - b.id); // stable tiebreaker by ID
+  }
+
+  for(const d of dates){
+    schedule[d.date]={rooms:{}, relievers:[], date:d.date, label:d.label};
+    let usedToday=[];
+
+    // assign invigilators first (fair by dutyCount)
+    for(const room of rooms){
+      const candidates = availableTeachers(d.date, usedToday, 'duty');
+      if (candidates.length < invPerRoom) console.warn(`Insufficient teachers for invigilators on ${d.date}`);
+      const assigned = candidates.slice(0, invPerRoom);
+      assigned.forEach(id => {
+        dutyCount[id]++;
+        usedToday.push(id);
+      });
+      schedule[d.date].rooms[room.num] = assigned;
+    }
+
+    // assign relievers second (fair by reliefCount)
+    const relCandidates = availableTeachers(d.date, usedToday, 'relief');
+    if (relCandidates.length < relievers) console.warn(`Insufficient teachers for relievers on ${d.date}`);
+    const assignedRelievers = relCandidates.slice(0, relievers);
+    assignedRelievers.forEach(id => {
+      reliefCount[id]++;
+      usedToday.push(id);
+    });
+    schedule[d.date].relievers = assignedRelievers;
+  }
+
+  saveData();
+  renderSchedule(dutyCount, reliefCount);
+}
+
+function getTeacher(id){return teachers.find(t=>t.id===id);}
+
+function renderSchedule(dutyCount, reliefCount){
+  const el=document.getElementById('scheduleOutput');
+  if(!Object.keys(schedule).length){el.innerHTML='<div class="alert alert-info">No schedule yet.</div>';return;}
+
+  let html=`<div class="alert alert-success">✅ Schedule generated for ${dates.length} day(s), ${rooms.length} room(s), ${teachers.length} teacher(s).</div>`;
+
+  for(const d of dates){
+    const s=schedule[d.date];
+    html+=`
+    <div class="card" style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;">${s.label}</div>
+          <div style="color:var(--muted);font-size:0.85rem;">📅 ${formatDate(d.date)}</div>
+        </div>
+        <span class="tag tag-teal">Day ${dates.indexOf(d)+1}</span>
+      </div>
+      <div class="schedule-wrap">
+        <table>
+          <thead><tr><th>Room No.</th><th>Capacity</th><th>Invigilator(s)</th></tr></thead>
+          <tbody>
+            ${rooms.map(r=>{
+              const ids=s.rooms[r.num]||[];
+              const tList=ids.map(id=>{const t=getTeacher(id);return t?`<span class="tag tag-blue" style="border-color:${t.color}33;color:${t.color};background:${t.color}15">${t.name}</span>`:''}).join('');
+              return `<tr><td><strong>${r.num}</strong></td><td>${r.cap}</td><td><div class="duty-cell">${tList||'<span style="color:var(--muted)">Unassigned</span>'}</div></td></tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:16px;">
+        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:8px;font-weight:600;">🔄 RELIEVERS FOR THE DAY</div>
+        <div class="duty-cell">
+          ${(s.relievers||[]).map(id=>{const t=getTeacher(id);return t?`<span class="tag tag-gold">${t.name}</span>`:''}).join('')||'<span style="color:var(--muted)">None assigned</span>'}
+        </div>
+      </div>
+    </div>`;
+  }
+  el.innerHTML=html; 
+}
+
+// ===== STATS =====
+function renderStats(){
+  const el=document.getElementById('statsOutput');
+  if(!teachers.length||!Object.keys(schedule).length){
+    el.innerHTML='<div class="alert alert-info">Generate a schedule first to see statistics.</div>';return;
+  }
+
+  // Use passed dutyCount (already computed)
+  const counts = dutyCount;
+
+  const maxCount=Math.max(...Object.values(counts),1);
+  const sortedTeachers=[...teachers].sort((a,b)=>counts[b.id]-counts[a.id]);
+  const totalAssigned=Object.values(counts).reduce((a,b)=>a+b,0);
+  const avg=(totalAssigned/teachers.length).toFixed(1);
+
+  let html=`
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-num" style="color:var(--teal)">${dates.length}</div><div class="stat-label">Exam Days</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--blue)">${rooms.length}</div><div class="stat-label">Rooms</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--gold)">${teachers.length}</div><div class="stat-label">Teachers</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)">${avg}</div><div class="stat-label">Avg. Duties/Teacher</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📊 Duties & Reliefs per Teacher</div>
+    ${sortedTeachers.map(t=>`
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="avatar" style="background:${t.color}22;color:${t.color}">${initials(t.name)}</div>
+            <div>
+              <div style="font-size:0.88rem;font-weight:500;">${t.name}</div>
+              <div style="font-size:0.75rem;color:var(--muted)">${t.dept} | Duties: ${counts[t.id]} Reliefs: ${reliefCount[t.id]}</div>
+            </div>
+          </div>
+          <span class="badge" style="background:var(--teal)">${counts[t.id]}</span>
+        </div>
+        <div class="count-bar-wrap">
+          <div class="count-bar"><div class="count-bar-fill" style="width:${Math.max((counts[t.id]/maxCount)*100, 10)}%;background:var(--teal)"></div></div>
+          <span class="count-val">${counts[t.id]} duties</span>
+        </div>
+      </div>
+    `).join('')}
+  </div>`;
+
+  el.innerHTML=html;
+}
+
+// ===== UTILS =====
+function initials(name){return name.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();}
+function formatDate(d){const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+
+// ===== INIT =====
+loadData();
+renderDates();
+renderRooms();
+renderTeachers();
+</script>
+</body>
+</html>
